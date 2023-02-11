@@ -79,7 +79,7 @@ pipeline {
                      string(credentialsId: 'user_name', variable: 'user_name_var'),
                      string(credentialsId: 'pass_word', variable: 'pass_word_var'),
                      string(credentialsId: 'dbname', variable: 'dbname_var'),
-                     string(credentialsId: 'server_instance', variable: 'server_instance_var')
+                     string(credentialsId: 'server_instance', variable: 'server_instance_var'),
                      string(credentialsId: 'acc_number', variable: 'acc_number_var')
                      ]) {
 
