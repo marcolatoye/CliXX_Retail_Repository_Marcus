@@ -84,10 +84,9 @@ pipeline {
                      ]) {
 
          sh '''
-               echo ${user_name}
                USERNAME="${user_name}"
                PASSWORD="${pass_word}"
-               DBNAME="${dbname}"
+               DBNAME='wordpressdb'
                ACC_NUMBER="${acc_number}"
                SERVER_IP=$(curl -s http://checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//')
                SERVER_INSTANCE="${server_instance}"
