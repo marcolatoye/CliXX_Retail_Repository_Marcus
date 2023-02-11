@@ -3,10 +3,12 @@ pipeline {
     environment {
         VERSION = "1.0.${BUILD_NUMBER}"
         PATH = "${PATH}:${getSonarPath()}:${getDockerPath()}"
+        RUNNER = "Marcus"
     }
     stages {
         stage ('Sonarcube Scan') {
         steps {
+          slackSend (color: '#FFFF00', message: "STARTING SONARQUBE SCAN - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
          script {
           scannerHome = tool 'sonarqube'
         }
@@ -21,6 +23,7 @@ pipeline {
 }
  stage('Quality Gate') {
             steps {
+              slackSend (color: '#FFFF00', message: "WAITING FOR QUALITY GATE REPORT - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
                 timeout(time: 3, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
             }
@@ -28,6 +31,7 @@ pipeline {
         }
           stage ('Build Docker Image') {
           steps {
+            slackSend (color: '#FFFF00', message: "BUILDIN THE DOCKER IMAGE - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
             // script{
             //  dockerHome= tool 'docker-inst'
             // }
@@ -37,6 +41,7 @@ pipeline {
         }
   stage ('Starting Docker Image') {
           steps {
+            slackSend (color: '#FFFF00', message: "STARTING DOCKER IMAGE - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
               sh '''
               if ( docker ps|grep clixx-cont ) then
                  echo "Docker image exists, killing it"
@@ -51,6 +56,7 @@ pipeline {
         }
   stage ('Restore CliXX Database') {
           steps {
+            slackSend (color: '#FFFF00', message: "RESTORING CLIXX DATABASE - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
               sh '''
             python3 -m venv python3-virtualenv
             source python3-virtualenv/bin/activate
@@ -64,12 +70,13 @@ pipeline {
         }
   stage ('Configure DB Instance') {
           steps {
+              slackSend (color: '#FFFF00', message: "CONFIGURE DATABASE INSTANCE - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
               sh '''
-               USERNAME='wordpressuser'
-               PASSWORD='W3lcome123'
-               DBNAME='wordpressdb'
+               USERNAME=$user_name
+               PASSWORD=$pass_word
+               DBNAME=$dbname
                SERVER_IP=$(curl -s http://checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//')
-               SERVER_INSTANCE='wordpressdbclixxjenkins.cudbu62q5h0d.us-east-1.rds.amazonaws.com'
+               SERVER_INSTANCE=$server_instance
                echo "use wordpressdb;" >> $WORKSPACE/db.setup
                echo "UPDATE wp_options SET option_value = '$SERVER_IP' WHERE option_value LIKE 'http%';">> $WORKSPACE/db.setup
                mysql -u $USERNAME --password=$PASSWORD -h $SERVER_INSTANCE  -D  $DBNAME < $WORKSPACE/db.setup
@@ -78,6 +85,7 @@ pipeline {
         }
       stage ('Tear Down CliXX Docker Image and Database') {
           steps {
+            slackSend (color: '#FFFF00', message: "TEARING DOWN CLIXX DOCKER IMAGE AND DATABASE - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
              script {
                 def userInput = input(id: 'confirm', message: 'Tear Down Environment?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Tear Down Environment?', name: 'confirm'] ])
              }
@@ -95,13 +103,14 @@ pipeline {
         }
         stage ('Log Into ECR and push the newly created Docker') {
           steps {
+            slackSend (color: '#FFFF00', message: "PUSHING DOCKER IMAGE INTO ECR - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
              script {
                 def userInput = input(id: 'confirm', message: 'Push Image To ECR?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Push to ECR?', name: 'confirm'] ])
              }
               sh '''
-                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 838518434784.dkr.ecr.us-east-1.amazonaws.com/clixx-repository
-                docker tag clixx-image:$VERSION 838518434784.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
-                docker push 838518434784.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
+                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $acc_number.dkr.ecr.us-east-1.amazonaws.com/clixx-repository
+                docker tag clixx-image:$VERSION $acc_number.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
+                docker push $acc_number.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
               '''
           }
         }
