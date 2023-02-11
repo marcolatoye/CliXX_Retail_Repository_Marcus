@@ -86,13 +86,13 @@ pipeline {
          sh '''
                USERNAME="${user_name}"
                PASSWORD="${pass_word}"
-               DBNAME='wordpressdb'
+               DBNAME="${dbname}"
                ACC_NUMBER="${acc_number}"
                SERVER_IP=$(curl -s http://checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//')
                SERVER_INSTANCE="${server_instance}"
-               echo "use wordpressdb;" >> $WORKSPACE/dbase.setup
-               echo "UPDATE wp_options SET option_value = '$SERVER_IP' WHERE option_value LIKE 'http%';">> $WORKSPACE/dbase.setup
-               mysql -u $USERNAME --password=$PASSWORD -h $SERVER_INSTANCE  -D  $DBNAME < $WORKSPACE/dbase.setup
+               echo "use '$DBNAME';" >> $WORKSPACE/dbasefile.setup
+               echo "UPDATE wp_options SET option_value = '$SERVER_IP' WHERE option_value LIKE 'http%';">> $WORKSPACE/dbasefile.setup
+               mysql -u $USERNAME --password=$PASSWORD -h $SERVER_INSTANCE  -D  $DBNAME < $WORKSPACE/dbasefile.setup
               '''
        }
           }
