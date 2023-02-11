@@ -72,11 +72,11 @@ pipeline {
           steps {
               slackSend (color: '#FFFF00', message: "CONFIGURE DATABASE INSTANCE - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
               sh '''
-               USERNAME=$user_name
-               PASSWORD=$pass_word
-               DBNAME=$dbname
+               USERNAME='$user_name'
+               PASSWORD='$pass_word'
+               DBNAME='$dbname'
                SERVER_IP=$(curl -s http://checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//')
-               SERVER_INSTANCE=$server_instance
+               SERVER_INSTANCE='$server_instance'
                echo "use wordpressdb;" >> $WORKSPACE/db.setup
                echo "UPDATE wp_options SET option_value = '$SERVER_IP' WHERE option_value LIKE 'http%';">> $WORKSPACE/db.setup
                mysql -u $USERNAME --password=$PASSWORD -h $SERVER_INSTANCE  -D  $DBNAME < $WORKSPACE/db.setup
@@ -108,9 +108,9 @@ pipeline {
                 def userInput = input(id: 'confirm', message: 'Push Image To ECR?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Push to ECR?', name: 'confirm'] ])
              }
               sh '''
-                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $acc_number.dkr.ecr.us-east-1.amazonaws.com/clixx-repository
-                docker tag clixx-image:$VERSION $acc_number.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
-                docker push $acc_number.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
+                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin '$acc_number'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository
+                docker tag clixx-image:$VERSION '$acc_number'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
+                docker push '$acc_number'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
               '''
           }
         }
