@@ -86,7 +86,7 @@ pipeline {
          sh '''
                echo ${user_name}
                USERNAME="${user_name}"
-               PASSWORD="${$pass_word}"
+               PASSWORD="${pass_word}"
                DBNAME="${dbname}"
                ACC_NUMBER="${acc_number}"
                SERVER_IP=$(curl -s http://checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//')
