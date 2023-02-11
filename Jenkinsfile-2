@@ -85,15 +85,15 @@ pipeline {
 
          sh '''
                echo ${user_name}
-               USERNAME='${user_name}'
-               PASSWORD='${$pass_word}'
-               DBNAME='${dbname}'
-               ACC_NUMBER='${acc_number}'
+               USERNAME="${user_name}"
+               PASSWORD="${$pass_word}"
+               DBNAME="${dbname}"
+               ACC_NUMBER="${acc_number}"
                SERVER_IP=$(curl -s http://checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//')
-               SERVER_INSTANCE='${server_instance}'
+               SERVER_INSTANCE="${server_instance}"
                echo "use '$DBNAME';" >> $WORKSPACE/db.setup
                echo "UPDATE wp_options SET option_value = '$SERVER_IP' WHERE option_value LIKE 'http%';">> $WORKSPACE/db.setup
-               mysql -u '$USERNAME' --password='$PASSWORD' -h '$SERVER_INSTANCE'  -D  '$DBNAME' < $WORKSPACE/db.setup
+               mysql -u $USERNAME --password=$PASSWORD -h $SERVER_INSTANCE  -D  '$DBNAME' < $WORKSPACE/db.setup
               '''
        }
           }
