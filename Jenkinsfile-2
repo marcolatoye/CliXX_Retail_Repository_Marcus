@@ -71,16 +71,30 @@ pipeline {
   stage ('Configure DB Instance') {
           steps {
               slackSend (color: '#FFFF00', message: "CONFIGURE DATABASE INSTANCE - '${env.RUNNER}': Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-              sh '''
-               USERNAME='$user_name'
-               PASSWORD='$pass_word'
-               DBNAME='$dbname'
+              script {
+           def userInput = input(id: 'confirm', message: 'Is DB creation complete?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Complete?', name: 'confirm'] ])
+        }
+
+         withCredentials([
+                     string(credentialsId: 'user_name', variable: 'user_name_var'),
+                     string(credentialsId: 'pass_word', variable: 'pass_word_var'),
+                     string(credentialsId: 'dbname', variable: 'dbname_var'),
+                     string(credentialsId: 'server_instance', variable: 'server_instance_var')
+                     string(credentialsId: 'acc_number', variable: 'acc_number_var')
+                     ]) {
+
+         sh '''
+               USERNAME='${user_name_var}'
+               PASSWORD='${$pass_word_var}'
+               DBNAME='${dbname_var}'
+               ACC_NUMBER='${acc_number_var}'
                SERVER_IP=$(curl -s http://checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//')
-               SERVER_INSTANCE='$server_instance'
-               echo "use wordpressdb;" >> $WORKSPACE/db.setup
+               SERVER_INSTANCE='${server_instance_var}'
+               echo "use '$DBNAME';" >> $WORKSPACE/db.setup
                echo "UPDATE wp_options SET option_value = '$SERVER_IP' WHERE option_value LIKE 'http%';">> $WORKSPACE/db.setup
-               mysql -u $USERNAME --password=$PASSWORD -h $SERVER_INSTANCE  -D  $DBNAME < $WORKSPACE/db.setup
+               mysql -u '$USERNAME' --password='$PASSWORD' -h $SERVER_INSTANCE  -D  '$DBNAME' < $WORKSPACE/db.setup
               '''
+       }
           }
         }
       stage ('Tear Down CliXX Docker Image and Database') {
@@ -108,9 +122,9 @@ pipeline {
                 def userInput = input(id: 'confirm', message: 'Push Image To ECR?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Push to ECR?', name: 'confirm'] ])
              }
               sh '''
-                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin '$acc_number'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository
-                docker tag clixx-image:$VERSION '$acc_number'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
-                docker push '$acc_number'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
+                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin '$ACC_NUMBER'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository
+                docker tag clixx-image:$VERSION '$ACC_NUMBER'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
+                docker push '$ACC_NUMBER'.dkr.ecr.us-east-1.amazonaws.com/clixx-repository:clixx-image-$VERSION
               '''
           }
         }
